@@ -38,6 +38,8 @@ def main():
 
     LIMIT = 0
     DONE = False
+    choosen = False
+    choose_counter = 0
     position_dict = {}
     board = Board()
     SCREEN, CLOCK = board.Grid(win_height, win_width)
@@ -61,6 +63,7 @@ def main():
                 print("nbest solutions:", n_best)
                 if n_best != [] and len(n_best[0]) > 1:
                     edits = True
+                    choosen = True
                     print("Got a n_best Solution", n_best)
                     source = word
                     # recommendation over text ares
@@ -70,7 +73,9 @@ def main():
                         set_rect = (win_height/solutions*idx + 10,win_width/2,win_height-20, 50)
                         text = font.render(str(n[0]), True, WHITE)
                         SCREEN.blit(text, set_rect)
-                        target = n_best[0][0]
+
+                    #targeting = board.selection(n_best,win_height,margin)
+                    target = n_best[0][0]
                     matrix, min_edits, tmp_matrix = min_edit_distance(source, target)
                     idx = list('#' + source)
                     cols = list('#' + target)
@@ -85,7 +90,33 @@ def main():
                     board.set_source(SCREEN, CLOCK, row, col, df, source, target)
                     pygame.display.update()
                     board.fill(SCREEN, CLOCK, row, col, tmp_matrix, source, target)
-
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_UP and choosen:
+                pygame.draw.rect(SCREEN,GREY,(win_height/solutions*0 + 10,win_width/2 + 30,win_height/2, 20))
+                choose = True
+                choosen = False
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN and choose:
+                print("get the number from the field", n_best[choose_counter][0])
+                choose = False
+                #reset the recommendation
+                pygame.draw.rect(SCREEN,GREY,(10,win_width/2,win_height-20,50))
+                # reset the grid
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_LEFT and choose:
+                old_choosen = choose_counter
+                if choose_counter >= solutions-1:
+                    choose_counter = 0
+                else:
+                    choose_counter += 1
+                pygame.draw.rect(SCREEN,GREY,(win_height/solutions*choose_counter + 10,win_width/2 + 30,win_height/2, 20))
+                pygame.draw.rect(SCREEN,GREEN,(win_height/solutions*old_choosen -10 ,win_width/2 + 30,win_height/2, 20))
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_RIGHT and choose:
+                old_choosen = choose_counter
+                if choose_counter > solutions:
+                    choose_counter = 0
+                else:
+                    choose_counter += 1
+                pygame.draw.rect(SCREEN,GREEN,(win_height/solutions*old_choosen + 10,win_width/2 + 30,win_height/2, 20))
+                pygame.draw.rect(SCREEN,GREY,(win_height/solutions*choose_counter + 10,win_width/2 + 30,win_height/2, 20))
+        print(type(textinput))
         pygame.draw.rect(SCREEN,BLUE,(0,win_width/2 + 50,win_width,win_width/3 + 50)) # Plus 50 because of recommendation
         text = textinput.update(events)
         # Blit its surface onto the screen
