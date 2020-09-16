@@ -171,6 +171,11 @@ class TextInput:
     def get_text(self):
         return self.input_string
 
+    # versuch
+    def set_text(self,suggestion):
+        self.input_string = suggestion
+        return self.input_string
+
     def get_cursor_position(self):
         return self.cursor_position
 

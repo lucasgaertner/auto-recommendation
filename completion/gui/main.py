@@ -21,32 +21,30 @@ def main():
     textinput = pygame_textinput.TextInput()
 
     # auto correction
-
+    # data processing
     data = os.path.join('auto', 'shakespeare.txt')
     word_l = process_data(data)
     vocab = set(word_l)
     word_count_dict = get_count(word_l)
     probs = get_probs(word_count_dict)
 
-
-
+    font = pygame.font.Font('freesansbold.ttf', 32)
     win_width = 550 
     win_height = 500
 
     row = 2
     col = 2
-
     LIMIT = 0
     DONE = False
     choosen = False
+    choose = False
     choose_counter = 0
     position_dict = {}
     board = Board()
     SCREEN, CLOCK = board.Grid(win_height, win_width)
-    
-    font = pygame.font.Font('freesansbold.ttf', 32)
     while not DONE:      
         events = pygame.event.get()
+        # edits is the min_edits_distance show variable
         edits = False
         for event in events: 
             if event.type == pygame.QUIT:
@@ -58,23 +56,31 @@ def main():
                 word = re.findall('\w+', words)
                 l = len(word) - 1
                 word = word[l]
-                print("this is the last typed word:", word)
-                n_best = get_corrections(word, probs, vocab, n=2, verbose=False)
-                print("nbest solutions:", n_best)
+                n_best, best_words = get_corrections(word, probs, vocab, n=2, verbose=False)
                 if n_best != [] and len(n_best[0]) > 1:
                     edits = True
                     choosen = True
-                    print("Got a n_best Solution", n_best)
                     source = word
                     # recommendation over text ares
+                    # solution won't get bigger than 2, because of the n=2 parameter we are passing in the min_edit_distance function
                     solutions = len(n_best[0])
-                    pygame.draw.rect(SCREEN,GREEN,(10,win_width/2,win_height-20,50))
+                    w_top = win_width/2
+                    pygame.draw.rect(SCREEN,GREEN,(10,w_top,win_height-20,50))
+                    top = 0
+                    left = win_height/2
+                    for idx, w in enumerate(best_words):
+                        if top > w_top -30:
+                            top = 10
+                            left = win_height/2 + 150
+                        set_rect = (left,top,win_height/3, 0)
+                        text = font.render(str(w), True, GREEN)
+                        SCREEN.blit(text, set_rect) 
+                        top += 25
+                        sleep(0.3)
                     for idx, n in enumerate(n_best):
-                        set_rect = (win_height/solutions*idx + 10,win_width/2,win_height-20, 50)
+                        set_rect = (win_height/solutions*idx + 10,w_top,win_height-20, 50)
                         text = font.render(str(n[0]), True, WHITE)
                         SCREEN.blit(text, set_rect)
-
-                    #targeting = board.selection(n_best,win_height,margin)
                     target = n_best[0][0]
                     matrix, min_edits, tmp_matrix = min_edit_distance(source, target)
                     idx = list('#' + source)
@@ -95,11 +101,17 @@ def main():
                 choose = True
                 choosen = False
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN and choose:
-                print("get the number from the field", n_best[choose_counter][0])
                 choose = False
-                #reset the recommendation
+                suggestion = str(n_best[choose_counter][0]) + ' '
+                word = re.findall('\w+', words)
+                l = len(word) - 1
+                suggested_sen = words.replace(word[l], suggestion)
+                textinput.set_text(suggested_sen)
+                # reset the recommendation
                 pygame.draw.rect(SCREEN,GREY,(10,win_width/2,win_height-20,50))
                 # reset the grid
+                pygame.draw.rect(SCREEN,GREY,(0,0,win_height,win_width/2))
+                choose_counter = 0
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_LEFT and choose:
                 old_choosen = choose_counter
                 if choose_counter >= solutions-1:
@@ -116,7 +128,6 @@ def main():
                     choose_counter += 1
                 pygame.draw.rect(SCREEN,GREEN,(win_height/solutions*old_choosen + 10,win_width/2 + 30,win_height/2, 20))
                 pygame.draw.rect(SCREEN,GREY,(win_height/solutions*choose_counter + 10,win_width/2 + 30,win_height/2, 20))
-        print(type(textinput))
         pygame.draw.rect(SCREEN,BLUE,(0,win_width/2 + 50,win_width,win_width/3 + 50)) # Plus 50 because of recommendation
         text = textinput.update(events)
         # Blit its surface onto the screen

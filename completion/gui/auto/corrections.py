@@ -25,4 +25,4 @@ def get_corrections(word, probs, vocab, n=2, verbose = False):
         
     n_best = best_words.most_common(n)
     if verbose: print("entered word = ", word, "\nsuggestions = ", suggestions)
-    return n_best
+    return n_best, best_words 
